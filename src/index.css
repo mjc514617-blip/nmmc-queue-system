@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* =========================
+   FULL SCREEN APP
+========================= */
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  overflow: hidden;
+  background-color: #f8fafc;
+  font-family: system-ui, sans-serif;
+}
+
+/* =========================
+   PRINT STYLES
+========================= */
+@media print {
+
+  body * {
+    visibility: hidden;
+  }
+
+  .print-area,
+  .print-area * {
+    visibility: visible;
+  }
+
+  .print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+
+  button {
+    display: none !important;
+  }
+
+}
