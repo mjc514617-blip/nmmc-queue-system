@@ -130,24 +130,7 @@ const DepartmentSelection: React.FC<DepartmentSelectionProps> = ({
 };
 
   // 🔥 NEW: Real-Time Service Counter Update
-  const updateServiceCount = (department: string, service: string) => {
-    const stored = JSON.parse(localStorage.getItem("serviceCounts") || "{}");
-
-    if (!stored[department]) {
-      stored[department] = {};
-    }
-
-    if (!stored[department][service]) {
-      stored[department][service] = 0;
-    }
-
-    stored[department][service] += 1;
-
-    localStorage.setItem("serviceCounts", JSON.stringify(stored));
-  };
-
-  // =========================
-  // MODE 1: Select Department
+  // (Removed unused and incomplete updateServiceCount function)
   // =========================
   if (!selectedDepartment) {
     return (
