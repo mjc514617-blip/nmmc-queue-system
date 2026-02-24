@@ -22,7 +22,7 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
 }) => {
 
   // 🔥 QR will go directly to Live Monitor of that department
-  const qrValue = `http:// 192.168.0.13:5173/live/${encodeURIComponent(department)}`;
+  const qrValue = `https://nmmc-queue-system.vercel.app/live/${department}`;
 
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full text-white p-10 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 overflow-auto">
