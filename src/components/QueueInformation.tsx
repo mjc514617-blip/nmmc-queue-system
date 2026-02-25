@@ -22,8 +22,7 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
 }) => {
 
   // 🔥 QR will go directly to Live Monitor of that department
-  const qrValue = `https://nmmc-queue-system.vercel.app/live/${department}`;
-
+    const qrValue = `https://nmmc-queue-system-b0ymkzng7-mjc514617-blips-projects.vercel.app/live/${department}`;
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full text-white p-10 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 overflow-auto">
       
