@@ -71,3 +71,17 @@ export default defineConfig([
   },
 ])
 ```
+
+---
+
+## Environment variables
+
+This project reads a few Vite environment variables during build.
+
+- `VITE_QR_BASE_URL` – base URL used when generating a QR code in `QueueInformation`.
+  If unset it defaults to `https://nmmc-queue-system.vercel.app`.
+
+Create a `.env` file in the project root with your values (this file is
+ignored by git). You can also define these variables in your Vercel project
+settings so each deployment uses the same domain regardless of the generated
+preview hostname.
