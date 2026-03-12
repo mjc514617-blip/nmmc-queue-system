@@ -1,6 +1,7 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
+import { supabase } from "../lib/supabaseClient";
 
 const subServices: Record<string, string[]> = {
   "Internal Medicine": [
@@ -107,18 +108,23 @@ const DepartmentPage = () => {
     localStorage.setItem("serviceCounts", JSON.stringify(stored));
   };
 
-  const updateLiveQueue = (
+  const updateLiveQueue = async (
     number: number,
     running: boolean,
     newHistory: string[]
   ) => {
-    const stored = JSON.parse(localStorage.getItem("liveQueue") || "{}");
-    stored[id || ""] = {
-      currentNumber: number,
-      isRunning: running,
-      history: newHistory,
-    };
-    localStorage.setItem("liveQueue", JSON.stringify(stored));
+    const deptName = (id || "").trim().toLowerCase();
+    if (!deptName) return;
+    await supabase
+      .from("live_queue")
+      .upsert({
+        department: deptName,
+        current_number: number,
+        is_running: running,
+        history: newHistory,
+      }, {
+        onConflict: "department",
+      });
   };
 
   const getNextAvailableService = () => {

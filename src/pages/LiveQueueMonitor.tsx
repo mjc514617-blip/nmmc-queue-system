@@ -1,28 +1,75 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabaseClient";
 
 const LiveQueueMonitor = () => {
   const { department } = useParams();
 
   const [currentNumber, setCurrentNumber] = useState(0);
   const [history, setHistory] = useState<string[]>([]);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const loadQueue = () => {
-      const stored = JSON.parse(localStorage.getItem("liveQueue") || "{}");
+    const deptName = (department || "").trim().toLowerCase();
+    if (!deptName) {
+      setError("Missing department in URL.");
+      return;
+    }
 
-      if (stored[department || ""]) {
-        setCurrentNumber(stored[department || ""].currentNumber || 0);
-        setHistory(stored[department || ""].history || []);
-        setLastUpdated(new Date());
+    const fetchInitial = async () => {
+      const { data, error } = await supabase
+        .from("live_queue")
+        .select("current_number, history")
+        .ilike("department", deptName)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+
+      if (error) {
+        setError(error.message);
+        console.error("Supabase fetch error", error);
+        return;
+      }
+      setError(null);
+      const latest = data?.[0];
+      if (latest) {
+        setCurrentNumber(latest.current_number);
+        setHistory(latest.history);
+      } else {
+        setCurrentNumber(0);
+        setHistory([]);
+        setError(`No live_queue row found for department: ${deptName}`);
       }
     };
 
-    loadQueue();
+    fetchInitial();
 
-    const interval = setInterval(loadQueue, 1000); // real-time polling
-    return () => clearInterval(interval);
+    // subscribe to all live_queue updates, then filter by department
+    // (avoids filter encoding issues and allows any department to work)
+    const channel = supabase
+      .channel("live_queue")
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "live_queue",
+        },
+        (payload) => {
+          const changedDepartment = (payload.new.department || "").toString().trim().toLowerCase();
+          if (changedDepartment !== deptName) return;
+          setCurrentNumber(payload.new.current_number);
+          setHistory(payload.new.history);
+        }
+      )
+      .subscribe();
+
+    // mobile browsers can pause realtime sockets; poll as a fallback.
+    const interval = setInterval(fetchInitial, 3000);
+
+    return () => {
+      clearInterval(interval);
+      supabase.removeChannel(channel);
+    };
   }, [department]);
 
   const nextInLine = history.slice(-5).map((_, i) =>
@@ -31,6 +78,11 @@ const LiveQueueMonitor = () => {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col">
+      {error && (
+        <div className="bg-red-600 text-white p-4 text-center">
+          Supabase error: {error}
+        </div>
+      )}
 
       {/* HEADER */}
       <div className="bg-blue-900 p-6 text-center">
@@ -81,10 +133,6 @@ const LiveQueueMonitor = () => {
         </div>
       </div>
 
-      {/* D. REAL TIME UPDATE */}
-      <div className="bg-gray-900 text-center py-2 text-sm">
-        Last Updated: {lastUpdated?.toLocaleTimeString()}
-      </div>
 
     </div>
   );

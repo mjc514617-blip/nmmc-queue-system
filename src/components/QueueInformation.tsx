@@ -26,8 +26,9 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
   // baking the Vercel preview ID into the code
   const QR_BASE_URL =
     import.meta.env.VITE_QR_BASE_URL ||
-    "https://nmmc-queue-system.vercel.app";
-  const qrValue = `${QR_BASE_URL}/live/${department}`;
+    (typeof window !== "undefined" ? window.location.origin : "");
+  const normalizedBaseUrl = QR_BASE_URL.replace(/\/$/, "");
+  const qrValue = `${normalizedBaseUrl}/live/${encodeURIComponent(department)}`;
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full text-white p-10 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 overflow-auto">
       
@@ -55,6 +56,9 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
           <QRCodeCanvas value={qrValue} size={150} />
           <p className="text-sm mt-3 text-gray-600">
             Scan to View Live Queue Monitor
+          </p>
+          <p className="text-xs mt-2 text-gray-500 break-all px-2">
+            {qrValue}
           </p>
         </div>
 
