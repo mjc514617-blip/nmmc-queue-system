@@ -20,6 +20,7 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
   onBack,
   onCancel,
 }) => {
+  const [daemonStatus, setDaemonStatus] = React.useState<"checking" | "online" | "offline">("checking");
 
   // 🔥 QR will go directly to Live Monitor of that department
   // use env var so we can override per deployment without
@@ -29,12 +30,53 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
     (typeof window !== "undefined" ? window.location.origin : "");
   const normalizedBaseUrl = QR_BASE_URL.replace(/\/$/, "");
   const qrValue = `${normalizedBaseUrl}/live/${encodeURIComponent(department)}`;
+
+  React.useEffect(() => {
+    let isMounted = true;
+
+    const checkDaemon = async () => {
+      try {
+        const response = await fetch("http://127.0.0.1:8787/health", {
+          method: "GET",
+        });
+
+        if (!isMounted) return;
+        setDaemonStatus(response.ok ? "online" : "offline");
+      } catch {
+        if (!isMounted) return;
+        setDaemonStatus("offline");
+      }
+    };
+
+    void checkDaemon();
+    const interval = window.setInterval(checkDaemon, 5000);
+
+    return () => {
+      isMounted = false;
+      window.clearInterval(interval);
+    };
+  }, []);
+
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full text-white p-10 bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 overflow-auto">
       
       <h1 className="text-4xl font-bold mb-10">
         Queue Information
       </h1>
+
+      <div className="mb-4">
+        <span
+          className={`inline-flex items-center rounded-full px-4 py-1 text-sm font-semibold ${
+            daemonStatus === "online"
+              ? "bg-green-500 text-white"
+              : daemonStatus === "offline"
+                ? "bg-red-500 text-white"
+                : "bg-yellow-400 text-blue-900"
+          }`}
+        >
+          Print Daemon: {daemonStatus === "online" ? "Connected" : daemonStatus === "offline" ? "Offline" : "Checking..."}
+        </span>
+      </div>
 
       <div className="print-area bg-white text-blue-900 rounded-3xl shadow-2xl p-12 w-full max-w-2xl text-center">
 

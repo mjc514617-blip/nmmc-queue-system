@@ -1,0 +1,16 @@
+[Unit]
+Description=Kiosk local serial print daemon
+After=network.target rfcomm-bind.service
+Requires=rfcomm-bind.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/nmmc-queue-system
+ExecStart=/usr/bin/node /opt/nmmc-queue-system/scripts/print-daemon.mjs
+Restart=always
+RestartSec=3
+Environment=PRINT_DAEMON_PORT=8787
+Environment=PRINTER_DEVICE=/dev/rfcomm0
+
+[Install]
+WantedBy=multi-user.target

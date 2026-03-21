@@ -1,0 +1,13 @@
+[Unit]
+Description=Bind Bluetooth RFCOMM printer device
+After=bluetooth.service
+Requires=bluetooth.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/rfcomm bind /dev/rfcomm0 86:67:7A:60:EA:72 1
+ExecStop=/usr/bin/rfcomm release /dev/rfcomm0
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

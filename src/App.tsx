@@ -68,6 +68,33 @@ const WelcomeScreenWrapper = () => {
   const [assignedRoom, setAssignedRoom] = React.useState("");
   const [ticketNumber, setTicketNumber] = React.useState(1);
 
+  const printTicket = async () => {
+    const payload = {
+      department: selectedDepartment || "",
+      service: selectedService || "",
+      ticketNumber: ticketNumber.toString().padStart(2, "0"),
+      doctorName: assignedDoctor,
+      roomNumber: assignedRoom,
+    };
+
+    try {
+      const response = await fetch("http://127.0.0.1:8787/print", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new Error(text || `Print daemon error: ${response.status}`);
+      }
+    } catch (error) {
+      console.error("Automatic serial print failed.", error);
+    }
+  };
+
   // 🔥 SERVICE COUNT FUNCTION
   const updateServiceCount = (department: string, service: string) => {
     const stored = JSON.parse(localStorage.getItem("serviceCounts") || "{}");
@@ -118,7 +145,7 @@ const WelcomeScreenWrapper = () => {
             if (selectedDepartment && selectedService) {
               updateServiceCount(selectedDepartment, selectedService);
             }
-            window.print();
+            void printTicket();
           }}
           onBack={() => setScreen("department")}
           onCancel={() => setScreen("welcome")}
