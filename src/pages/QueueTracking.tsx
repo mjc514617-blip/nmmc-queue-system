@@ -247,3 +247,7 @@ const QueueTracking: React.FC = () => {
         </div>
       </div>
     </div>
+  );
+};
+
+export default QueueTracking;
