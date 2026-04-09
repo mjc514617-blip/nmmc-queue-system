@@ -3,6 +3,8 @@ import { useEffect, useState } from "react";
 import BackButton from "../components/BackButton";
 import { supabase } from "../lib/supabaseClient";
 
+const formatQueueNumber = (value: number) => value.toString().padStart(3, "0");
+
 const subServices: Record<string, string[]> = {
   "Internal Medicine": [
     "Cardiology","Pulmonology","Nephrology",
@@ -72,53 +74,124 @@ const subServices: Record<string, string[]> = {
 const DepartmentPage = () => {
   const { id } = useParams();
   const services = subServices[id || ""] || [];
+  const normalizedDepartment = (id || "").trim().toLowerCase();
 
   const [counts, setCounts] = useState<any>({});
   const [liveNumber, setLiveNumber] = useState<number>(0);
   const [isRunning, setIsRunning] = useState<boolean>(false);
   const [history, setHistory] = useState<string[]>([]);
 
+  const fetchCountsFromSupabase = async () => {
+    if (!normalizedDepartment) {
+      setCounts({});
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from("tickets")
+      .select("service")
+      .ilike("department", normalizedDepartment)
+      .eq("status", "waiting");
+
+    if (error) {
+      console.error("Failed to load ticket counts", error);
+      return;
+    }
+
+    const counted: Record<string, number> = {};
+    for (const row of data || []) {
+      const service = row.service || "Unknown";
+      counted[service] = (counted[service] || 0) + 1;
+    }
+    setCounts(counted);
+  };
+
   /* LOAD COUNTS */
-    useEffect(() => {
-    const loadCounts = () => {
-      const stored = JSON.parse(localStorage.getItem("serviceCounts") || "{}");
-      setCounts(stored[id || ""] || {});
+  useEffect(() => {
+    if (!normalizedDepartment) return;
+
+    void fetchCountsFromSupabase();
+
+    const ticketChannel = supabase
+      .channel(`tickets_${normalizedDepartment}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "tickets",
+        },
+        () => {
+          void fetchCountsFromSupabase();
+        }
+      )
+      .subscribe();
+
+    const interval = setInterval(() => {
+      void fetchCountsFromSupabase();
+    }, 3000);
+
+    return () => {
+      clearInterval(interval);
+      void supabase.removeChannel(ticketChannel);
     };
-
-    loadCounts(); // initial load
-
-    const interval = setInterval(loadCounts, 1000); // refresh every 1 second
-
-    return () => clearInterval(interval);
-  }, [id]);
+  }, [normalizedDepartment]);
 
   /* LOAD LIVE QUEUE */
   useEffect(() => {
-    const stored = JSON.parse(localStorage.getItem("liveQueue") || "{}");
-    if (stored[id || ""]) {
-      setLiveNumber(stored[id || ""].currentNumber || 0);
-      setIsRunning(stored[id || ""].isRunning || false);
-      setHistory(stored[id || ""].history || []);
-    }
-  }, [id]);
+    const fetchLiveQueue = async () => {
+      if (!normalizedDepartment) return;
 
-  const updateCounts = (updatedCounts: any) => {
-    const stored = JSON.parse(localStorage.getItem("serviceCounts") || "{}");
-    stored[id || ""] = updatedCounts;
-    localStorage.setItem("serviceCounts", JSON.stringify(stored));
-  };
+      const { data } = await supabase
+        .from("live_queue")
+        .select("current_number, is_running, history")
+        .ilike("department", normalizedDepartment)
+        .order("updated_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!data) return;
+      setLiveNumber(Number(data.current_number) || 0);
+      setIsRunning(Boolean(data.is_running));
+      setHistory(data.history || []);
+    };
+
+    void fetchLiveQueue();
+
+    const liveQueueChannel = supabase
+      .channel(`live_queue_${normalizedDepartment}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "live_queue",
+        },
+        (payload) => {
+          const changedDepartment = (payload.new.department || "").toString().trim().toLowerCase();
+          if (changedDepartment !== normalizedDepartment) return;
+          setLiveNumber(Number(payload.new.current_number) || 0);
+          setIsRunning(Boolean(payload.new.is_running));
+          setHistory(payload.new.history || []);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      void supabase.removeChannel(liveQueueChannel);
+    };
+  }, [normalizedDepartment]);
 
   const updateLiveQueue = async (
     number: number,
     running: boolean,
     newHistory: string[]
   ) => {
-    const deptName = (id || "").trim().toLowerCase();
-    if (!deptName) return;
+    if (!normalizedDepartment) return;
     await supabase
       .from("live_queue")
       .upsert({
-        department: deptName,
+        department: normalizedDepartment,
         current_number: number,
         is_running: running,
         history: newHistory,
@@ -127,75 +200,95 @@ const DepartmentPage = () => {
       });
   };
 
-  const getNextAvailableService = () => {
-    for (const service of services) {
-      if ((counts[service] || 0) > 0) return service;
+  const getNextWaitingTicket = async () => {
+    if (!normalizedDepartment) return null;
+
+    const { data, error } = await supabase
+      .from("tickets")
+      .select("id, queue_number, service")
+      .ilike("department", normalizedDepartment)
+      .eq("status", "waiting")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Failed to get next waiting ticket", error);
+      return null;
     }
-    return null;
+
+    return data;
   };
 
-  const handleStart = () => {
+  const setTicketStatus = async (queueValue: number, status: "waiting" | "serving" | "served") => {
+    if (!normalizedDepartment || queueValue <= 0) return;
+
+    const formattedQueue = formatQueueNumber(queueValue);
+    await supabase
+      .from("tickets")
+      .update({ status })
+      .ilike("department", normalizedDepartment)
+      .eq("queue_number", formattedQueue);
+  };
+
+  const handleStart = async () => {
     if (isRunning) return;
-    const nextService = getNextAvailableService();
-    if (!nextService) return;
 
-    const updatedCounts = {
-      ...counts,
-      [nextService]: counts[nextService] - 1,
-    };
+    const nextTicket = await getNextWaitingTicket();
+    if (!nextTicket) return;
 
-    const nextNumber = liveNumber + 1;
-    const newHistory = [...history, nextService];
+    await supabase
+      .from("tickets")
+      .update({ status: "serving" })
+      .eq("id", nextTicket.id);
 
-    setCounts(updatedCounts);
+    const nextNumber = Number.parseInt(nextTicket.queue_number || "0", 10) || 0;
+    const newHistory = [...history, nextTicket.service || "Unknown"];
+
     setLiveNumber(nextNumber);
     setIsRunning(true);
     setHistory(newHistory);
 
-    updateCounts(updatedCounts);
-    updateLiveQueue(nextNumber, true, newHistory);
+    await updateLiveQueue(nextNumber, true, newHistory);
+    await fetchCountsFromSupabase();
   };
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (!isRunning) return;
-    const nextService = getNextAvailableService();
-    if (!nextService) return;
 
-    const updatedCounts = {
-      ...counts,
-      [nextService]: counts[nextService] - 1,
-    };
+    await setTicketStatus(liveNumber, "served");
+    const nextTicket = await getNextWaitingTicket();
+    if (!nextTicket) return;
 
-    const nextNumber = liveNumber + 1;
-    const newHistory = [...history, nextService];
+    await supabase
+      .from("tickets")
+      .update({ status: "serving" })
+      .eq("id", nextTicket.id);
 
-    setCounts(updatedCounts);
+    const nextNumber = Number.parseInt(nextTicket.queue_number || "0", 10) || 0;
+    const newHistory = [...history, nextTicket.service || "Unknown"];
+
     setLiveNumber(nextNumber);
     setHistory(newHistory);
 
-    updateCounts(updatedCounts);
-    updateLiveQueue(nextNumber, true, newHistory);
+    await updateLiveQueue(nextNumber, true, newHistory);
+    await fetchCountsFromSupabase();
   };
 
-  const handleBack = () => {
+  const handleBack = async () => {
     if (liveNumber <= 0 || history.length === 0) return;
-
-    const lastService = history[history.length - 1];
-
-    const updatedCounts = {
-      ...counts,
-      [lastService]: (counts[lastService] || 0) + 1,
-    };
 
     const newHistory = history.slice(0, -1);
     const newNumber = liveNumber - 1;
 
-    setCounts(updatedCounts);
+    await setTicketStatus(liveNumber, "waiting");
+    await setTicketStatus(newNumber, "serving");
+
     setLiveNumber(newNumber);
     setHistory(newHistory);
 
-    updateCounts(updatedCounts);
-    updateLiveQueue(newNumber, isRunning, newHistory);
+    await updateLiveQueue(newNumber, isRunning, newHistory);
+    await fetchCountsFromSupabase();
   };
 
   const handleReset = () => {
@@ -222,7 +315,7 @@ const DepartmentPage = () => {
           <h3 className="text-xl font-semibold mb-2">Now Serving</h3>
 
           <p className="text-5xl font-bold text-blue-900 mb-6">
-            {liveNumber.toString().padStart(2, "0")}
+            {formatQueueNumber(liveNumber)}
           </p>
 
           <div className="flex justify-center gap-4 flex-wrap">

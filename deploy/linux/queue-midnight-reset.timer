@@ -1,0 +1,10 @@
+[Unit]
+Description=Run NMMC queue midnight reset every day
+
+[Timer]
+OnCalendar=*-*-* 00:00:00
+Persistent=true
+Unit=queue-midnight-reset.service
+
+[Install]
+WantedBy=timers.target

@@ -15,7 +15,7 @@ const asArray = (value: unknown): LoginAccount[] => {
   return [];
 };
 
-const AdminLogin: React.FC = () => {
+const UserLogin: React.FC = () => {
   const navigate = useNavigate();
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
@@ -23,8 +23,10 @@ const AdminLogin: React.FC = () => {
 
   const handleLogin = () => {
     const accountSources: LoginAccount[] = [
-      ...asArray(JSON.parse(localStorage.getItem("adminUser") || "null")),
-      ...asArray(JSON.parse(localStorage.getItem("adminUsers") || "[]")),
+      ...asArray(JSON.parse(localStorage.getItem("userUser") || "null")),
+      ...asArray(JSON.parse(localStorage.getItem("userAccount") || "null")),
+      ...asArray(JSON.parse(localStorage.getItem("userAccounts") || "[]")),
+      ...asArray(JSON.parse(localStorage.getItem("accounts") || "[]")),
     ];
 
     const loginIdentifier = identifier.trim().toLowerCase();
@@ -45,7 +47,7 @@ const AdminLogin: React.FC = () => {
         JSON.stringify({
           username: matchedAccount.username || "User",
           email: matchedAccount.email || "",
-          role: "admin",
+          role: matchedAccount.role || "user",
         })
       );
       navigate("/admin/dashboard");
@@ -54,7 +56,6 @@ const AdminLogin: React.FC = () => {
     }
   };
 
-  // ✅ ENTER KEY SUPPORT
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       handleLogin();
@@ -62,13 +63,13 @@ const AdminLogin: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-100 via-white to-emerald-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-emerald-50 via-white to-slate-100 px-4">
       <div className="w-full max-w-md rounded-3xl border border-emerald-100 bg-white/95 p-10 shadow-[0_20px_60px_rgba(15,23,42,0.14)]">
         <h1 className="text-3xl font-extrabold tracking-tight text-center text-emerald-800 mb-2">
-          Admin Login
+          User Login
         </h1>
-        <p className="text-center text-sm text-slate-500 mb-8">
-          Sign in using your admin credentials to manage the dashboard.
+        <p className="mx-auto max-w-xs text-center text-sm text-slate-500 mb-8">
+          Sign in with your user account.
         </p>
 
         <div className="space-y-5">
@@ -107,32 +108,10 @@ const AdminLogin: React.FC = () => {
             Login
           </button>
 
-          <div className="flex justify-between text-sm">
-            <button
-              onClick={() => navigate("/admin/signup")}
-              className="text-emerald-700 hover:underline"
-            >
-              Sign Up
-            </button>
-
-            <button
-              onClick={() => navigate("/admin/forgot")}
-              className="text-emerald-700 hover:underline"
-            >
-              Forgot Password?
-            </button>
-          </div>
-
-          <button
-            onClick={() => navigate("/user")}
-            className="w-full text-sm text-slate-600 hover:text-emerald-700 hover:underline"
-          >
-            Continue as User Login
-          </button>
         </div>
       </div>
     </div>
   );
 };
 
-export default AdminLogin;
+export default UserLogin;

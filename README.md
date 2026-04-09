@@ -139,3 +139,58 @@ systemctl status kiosk-print-daemon.service
 
 When the kiosk app calls `onPrint`, it sends a POST request to `http://127.0.0.1:8787/print`.
 If daemon printing fails, browser printing remains as fallback.
+
+## Automatic Midnight Queue Reset (Archive + Reset)
+
+This project now includes a daily midnight reset flow that:
+
+- archives old rows from `tickets` into `tickets_archive`
+- deletes archived old rows from `tickets`
+- resets all `live_queue` rows to `current_number = 0`, `is_running = false`, and empty `history`
+
+### 1) Create the database function (one-time)
+
+Open Supabase SQL Editor and run:
+
+- `deploy/supabase/midnight-reset.sql`
+
+### 2) Test manually on Raspberry Pi
+
+From app root (`/opt/nmmc-queue-system/nmmc-queue-system`):
+
+```bash
+SUPABASE_URL="https://YOUR_PROJECT.supabase.co" \
+SUPABASE_SERVICE_ROLE_KEY="YOUR_SERVICE_ROLE_KEY" \
+RESET_TIMEZONE="Asia/Manila" \
+npm run queue:midnight-reset
+```
+
+### 3) Enable systemd timer (automatic at 12:00 AM)
+
+```bash
+sudo cp deploy/linux/queue-midnight-reset.service /etc/systemd/system/
+sudo cp deploy/linux/queue-midnight-reset.timer /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now queue-midnight-reset.timer
+sudo systemctl status queue-midnight-reset.timer
+```
+
+Edit `/etc/systemd/system/queue-midnight-reset.service` and set:
+
+- `SUPABASE_URL`
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `RESET_TIMEZONE` (default: `Asia/Manila`)
+
+Then reload units after editing:
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl restart queue-midnight-reset.timer
+```
+
+### 4) Verify timer and last run
+
+```bash
+systemctl list-timers | grep queue-midnight-reset
+journalctl -u queue-midnight-reset.service -n 100 --no-pager
+```

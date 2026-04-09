@@ -8,21 +8,27 @@ const AdminLayout: React.FC = () => {
   const [adminName, setAdminName] = useState("Admin");
 
   useEffect(() => {
-    const storedUser = JSON.parse(localStorage.getItem("adminUser") || "null");
+    const storedUser = JSON.parse(localStorage.getItem("currentPortalUser") || "null");
+    const fallbackUser = JSON.parse(localStorage.getItem("adminUser") || "null");
     if (storedUser) {
       setAdminName(storedUser.username);
+      return;
+    }
+    if (fallbackUser) {
+      setAdminName(fallbackUser.username);
     }
   }, []);
 
   const handleLogout = () => {
+    localStorage.removeItem("currentPortalUser");
     navigate("/admin");
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-blue-50 to-gray-100">
+    <div className="min-h-screen flex bg-linear-to-br from-blue-50 to-gray-100">
 
       {/* SIDEBAR */}
-      <div className="w-64 bg-gradient-to-b from-blue-900 to-indigo-900 text-white p-6 flex flex-col justify-between">
+      <div className="w-64 bg-linear-to-b from-blue-900 to-indigo-900 text-white p-6 flex flex-col justify-between">
 
         <div>
           <h2 className="text-2xl font-bold mb-10 tracking-wide">

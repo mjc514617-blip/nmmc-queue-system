@@ -1,0 +1,12 @@
+[Unit]
+Description=Run NMMC queue midnight reset (archive + reset live counters)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/nmmc-queue-system/nmmc-queue-system
+Environment=SUPABASE_URL=https://YOUR_PROJECT.supabase.co
+Environment=SUPABASE_SERVICE_ROLE_KEY=YOUR_SERVICE_ROLE_KEY
+Environment=RESET_TIMEZONE=Asia/Manila
+ExecStart=/usr/bin/node /opt/nmmc-queue-system/nmmc-queue-system/scripts/midnight-reset.mjs

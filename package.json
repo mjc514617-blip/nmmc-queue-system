@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "print:daemon": "node scripts/print-daemon.mjs"
+    "print:daemon": "node scripts/print-daemon.mjs",
+    "queue:midnight-reset": "node scripts/midnight-reset.mjs"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",

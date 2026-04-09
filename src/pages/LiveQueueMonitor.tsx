@@ -99,7 +99,7 @@ const LiveQueueMonitor = () => {
           <h2 className="text-3xl mb-6">NOW SERVING</h2>
 
           <div className="text-8xl font-bold text-green-400">
-            {currentNumber.toString().padStart(2, "0")}
+            {currentNumber.toString().padStart(3, "0")}
           </div>
 
           <p className="mt-4 text-lg">
@@ -117,7 +117,7 @@ const LiveQueueMonitor = () => {
                 key={index}
                 className="bg-gray-700 p-4 rounded-xl text-center text-3xl"
               >
-                {num.toString().padStart(2, "0")}
+                {num.toString().padStart(3, "0")}
               </div>
             ))}
           </div>
