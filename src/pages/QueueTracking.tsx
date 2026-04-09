@@ -148,7 +148,7 @@ const QueueTracking: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-linear-to-br from-slate-950 via-emerald-950 to-teal-900 px-6 text-white">
+      <div className="flex min-h-dvh w-full items-center justify-center bg-linear-to-br from-slate-950 via-emerald-950 to-teal-900 px-6 text-white">
         <div className="text-center">
           <div className="mx-auto mb-5 h-14 w-14 animate-spin rounded-full border-4 border-white/20 border-t-white" />
           <p className="text-2xl font-semibold">Loading your queue status...</p>
@@ -159,7 +159,7 @@ const QueueTracking: React.FC = () => {
 
   if (error || !queueRow) {
     return (
-      <div className="flex min-h-screen w-full items-center justify-center bg-linear-to-br from-slate-950 via-emerald-950 to-teal-900 px-6 text-white">
+      <div className="flex min-h-dvh w-full items-center justify-center bg-linear-to-br from-slate-950 via-emerald-950 to-teal-900 px-6 text-white">
         <div className="w-full max-w-xl rounded-3xl border border-white/10 bg-white/10 p-8 text-center shadow-2xl backdrop-blur">
           <h1 className="text-3xl font-bold">Queue Tracking</h1>
           <p className="mt-4 text-lg text-white/85">{error}</p>
@@ -170,7 +170,7 @@ const QueueTracking: React.FC = () => {
   }
 
   return (
-    <div className="w-full bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.22),transparent_35%),linear-gradient(135deg,#020617_0%,#064e3b_50%,#0f766e_100%)] px-4 py-10 text-white sm:px-6 lg:px-8">
+    <div className="h-dvh w-full overflow-y-auto overflow-x-hidden bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.22),transparent_35%),linear-gradient(135deg,#020617_0%,#064e3b_50%,#0f766e_100%)] px-4 py-10 text-white sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-5xl">
         <div className="rounded-4xl border border-white/10 bg-white/10 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-8 lg:p-10">
           <div className="mb-8 flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
