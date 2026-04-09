@@ -170,8 +170,8 @@ const QueueTracking: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.22),transparent_35%),linear-gradient(135deg,#020617_0%,#064e3b_50%,#0f766e_100%)] px-4 py-6 text-white sm:px-6 lg:px-8">
-      <div className="mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-5xl flex-col justify-center">
+    <div className="w-full bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.22),transparent_35%),linear-gradient(135deg,#020617_0%,#064e3b_50%,#0f766e_100%)] px-4 py-10 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto w-full max-w-5xl">
         <div className="rounded-4xl border border-white/10 bg-white/10 p-6 shadow-[0_20px_80px_rgba(0,0,0,0.35)] backdrop-blur-md sm:p-8 lg:p-10">
           <div className="mb-8 flex flex-col gap-4 border-b border-white/10 pb-6 sm:flex-row sm:items-end sm:justify-between">
             <div>
@@ -247,7 +247,3 @@ const QueueTracking: React.FC = () => {
         </div>
       </div>
     </div>
-  );
-};
-
-export default QueueTracking;
