@@ -10,6 +10,22 @@ const formatQueueNumber = (value: string | number | null | undefined): string =>
   return String(parsed).padStart(3, "0");
 };
 
+type TicketRow = {
+  queue_number: string;
+  department: string;
+  service: string;
+  doctor: string;
+  room: string;
+};
+
+const buildQueueCandidates = (rawQueueNumber: string): string[] => {
+  const trimmed = rawQueueNumber.trim();
+  const parsed = Number.parseInt(trimmed, 10);
+  const normalizedNumeric = Number.isNaN(parsed) ? null : String(parsed);
+  const padded = Number.isNaN(parsed) ? null : String(parsed).padStart(3, "0");
+  return Array.from(new Set([trimmed, normalizedNumeric, padded].filter(Boolean) as string[]));
+};
+
 const PatientQueue: React.FC = () => {
   const { queueNumber } = useParams<{ queueNumber: string }>();
   const [searchParams] = useSearchParams();
@@ -39,26 +55,46 @@ const PatientQueue: React.FC = () => {
           return;
         }
 
-        let ticketQuery = supabase
-          .from("tickets")
-          .select("queue_number, department, service, doctor, room")
-          .eq("queue_number", queueNumber)
-          .order("id", { ascending: false })
-          .limit(1);
+        const queueCandidates = buildQueueCandidates(queueNumber);
+        let ticket: TicketRow | null = null;
+        let lastErrorMessage: string | null = null;
 
-        if (departmentParam) {
-          ticketQuery = ticketQuery.ilike("department", departmentParam);
+        for (const candidate of queueCandidates) {
+          for (const withDepartmentFilter of [true, false]) {
+            let ticketQuery = supabase
+              .from("tickets")
+              .select("queue_number, department, service, doctor, room")
+              .eq("queue_number", candidate)
+              .order("id", { ascending: false })
+              .limit(1);
+
+            if (withDepartmentFilter && departmentParam) {
+              ticketQuery = ticketQuery.ilike("department", departmentParam);
+            }
+
+            const { data: ticketRows, error: ticketError } = await ticketQuery;
+
+            if (ticketError) {
+              lastErrorMessage = ticketError.message;
+              continue;
+            }
+
+            ticket = (ticketRows?.[0] as TicketRow | undefined) || null;
+            if (ticket) {
+              break;
+            }
+          }
+
+          if (ticket) {
+            break;
+          }
         }
 
-        const { data: ticketRows, error: ticketError } = await ticketQuery;
-
-        if (ticketError) {
-          setError(`Database error: ${ticketError.message}`);
-          return;
-        }
-
-        const ticket = ticketRows?.[0];
         if (!ticket) {
+          if (lastErrorMessage) {
+            setError(`Database error: ${lastErrorMessage}`);
+            return;
+          }
           setError("Queue number not found. Please check your ticket.");
           return;
         }
@@ -80,7 +116,11 @@ const PatientQueue: React.FC = () => {
           current_serving: liveData?.current_number?.toString() || null,
         });
       } catch (err) {
-        setError(err instanceof Error ? err.message : "An error occurred");
+        if (err instanceof TypeError && err.message.toLowerCase().includes("failed to fetch")) {
+          setError("Unable to connect to queue server. Please try again in a moment.");
+        } else {
+          setError(err instanceof Error ? err.message : "An error occurred");
+        }
       } finally {
         setLoading(false);
       }
@@ -148,7 +188,7 @@ const PatientQueue: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen w-full bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white">
+      <div className="flex items-center justify-center h-screen w-full bg-linear-to-br from-blue-900 via-blue-800 to-blue-700 text-white">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-white border-t-blue-300 mx-auto mb-4"></div>
           <p className="text-2xl font-semibold">Loading queue status...</p>
@@ -159,7 +199,7 @@ const PatientQueue: React.FC = () => {
 
   if (error || !queueData) {
     return (
-      <div className="flex items-center justify-center h-screen w-full bg-gradient-to-br from-blue-900 via-blue-800 to-blue-700 text-white p-6">
+      <div className="flex items-center justify-center h-screen w-full bg-linear-to-br from-blue-900 via-blue-800 to-blue-700 text-white p-6">
         <div className="bg-red-500 rounded-3xl shadow-2xl p-12 max-w-md text-center">
           <h2 className="text-3xl font-bold mb-4">Error</h2>
           <p className="text-lg mb-6">{error}</p>
@@ -176,7 +216,7 @@ const PatientQueue: React.FC = () => {
   const position = Math.max(0, yourNum - currentNum);
 
   return (
-    <div className="flex items-center justify-center h-screen w-full bg-gradient-to-br from-green-900 via-green-800 to-green-700 text-white p-6">
+    <div className="flex items-center justify-center h-screen w-full bg-linear-to-br from-green-900 via-green-800 to-green-700 text-white p-6">
       <div className="bg-white text-green-900 rounded-3xl shadow-2xl p-12 max-w-2xl w-full text-center">
         <h1 className="text-4xl font-bold mb-8">Your Queue Status</h1>
 

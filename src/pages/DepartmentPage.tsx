@@ -7,68 +7,75 @@ const formatQueueNumber = (value: number) => value.toString().padStart(3, "0");
 
 const subServices: Record<string, string[]> = {
   "Internal Medicine": [
-    "Cardiology","Pulmonology","Nephrology",
-    "Endocrinology & Diabetology","Gastroenterology",
-    "Hematology & Medical Oncology",
-  ],
-  Surgery: [
-    "General Surgery","Cardiovascular Surgery/Heart Center",
-    "Anesthesiology","Otorhinolaryngology","Neurosurgery",
+    "Dermatology", "Cardiology", "Pulmonology", "Rheumatology", "Geriatrics",
+    "Nephrology", "Gastroenterology", "Endocrinology", "Allergology & Immunology",
+    "Hematology", "Neurology",
   ],
   Pediatrics: [
-    "Child Consultation","Hepatology",
-    "Pediatric Gastroenterology","Nutrition",
-    "Pediatric Hematology","Pediatric Nephrology",
-    "Pediatric Cardiology","Neurodevelopmental OPD",
-    "Immunization",
+    "Pediatric Cardiology", "Pediatric Nephrology", "Pediatric Developmental", 
+    "Neonatology (KMC)", "Pediatric Immunization / Term High Risk Newborns", 
+    "Pediatric Neurology", "Clinic", "Pediatric Gastroenterology", "Pediatric Pulmonology",
+  ],
+  Surgery: [
+    "Urosurgery", "Neurosurgery",
+  ],
+  Dental: [
+    "Dental Consultation", "Preventive Services",
+    "Restorative Dentistry", "Oral Surgery",
+    "Dental Radiology", "Age Determination Services"
+  ],
+  "Family & Community Medicine (FAMED)": [
+    "Out-patient Consultaion",
+    "Preventive Care & Wellness",
+    "Chronic Disease Management",
+    "Family Health Services",
+    "Community-Oriented Primary Care"
   ],
   "Obstetrics & Gynecology": [
-    "Prenatal Care","High-Risk Pregnancy Management",
-    "Labor & Delivery","Postpartum Care",
-    "Gynecological Consultations",
-    "Minimally Invasive Surgery","Biopsy Services",
-    "Menopause Management",
+    "Dr. Armina T. Isidro",
+    "Dr. Sherilyn Bote-Casiño",
+    "Dr. Lucila Gatchalian",
+    "Dr. Rhinelia Bataclan",
+  ],
+  "Family Planning": [
+    "Contraceptive Counseling", "Intrauterine Device (IUD) Services",
+    "Implantable Contraceptives", "Sterilization Procedures",
+    "Natural Family Planning Education", "Emergency Contraception"
   ],
   Orthopedics: [
-    "Orthopedic Surgery","Trauma Surgery","Joint Replacement",
-    "Spine Surgery","Hand & Upper Limb Surgery",
-    "Orthopedic Oncology","Pediatric Orthopedics",
-  ],
-  "Family & Community Medicine": [
-    "Out-patient Consultation","Preventive Care & Wellness",
-    "Chronic Disease Management","Family Health Services",
-    "Community-Oriented Primary Care",
+    "Orthopedic Surgery", "Trauma Surgery",
+    "Joint Replacement", "Spine Surgery",
+    "Hand & Upper Limb Surgery",
+    "Orthopedic Oncology",
+    "Pediatric Orthopedics"
   ],
   "Rehabilitation Medicine": [
-    "Physical Therapy","Occupational Therapy",
+    "Physical Therapy", "Occupational Therapy",
     "Musculoskeletal Rehabilitation",
     "Neurological Rehabilitation",
     "Cardiopulmonary Rehabilitation",
     "Work-Related Injury Rehabilitation",
-    "Prosthetics & Orthotics","Pediatric Rehabilitation",
-  ],
-  "ENT - HNS": [
-    "Craniomaxillofacial Surgery","Facial Plastics",
-    "Head & Neck Surgery","Head & Neck Surgical Oncology",
-    "Otology","Laryngology","Rhinology",
-    "Microvascular Reconstruction",
-  ],
-  Dental: [
-    "Dental Consultation","Preventive Services",
-    "Restorative Dentistry","Oral Surgery",
-    "Dental Radiology","Age Determination Services",
-  ],
-  Pathology: [
-    "Fine Needle Aspiration Biopsy","Tissue Biopsy",
-    "Laboratory Testing","Routine Drug Testing",
-    "Blood Bank Services",
+    "Prosthetics & Orthotics",
+    "Pediatric Rehabilitation",
   ],
   Ophthalmology: [
-    "Glaucoma","Retina & Vitreous Services",
-    "Cornea & External Diseases","Oculoplastic & Orbit Surgery",
-    "Neuro-Ophthalmology","Uveitis & Immunology",
-    "Pediatric Ophthalmology","Cataract & Refractive Services",
+    "Glaucoma", "Retina & Vitreous Services",
+    "Cornea & External Diseases",
+    "Oculoplastic & Orbit Surgery",
+    "Neuro-Ophthalmology", "Uveitis & Immunology",
+    "Pediatric Ophthalmology",
+    "Cataract & Refractive Services",
   ],
+  Psychiatry: [
+    "Adult Psychiatry", "Child & Adolescent Psychiatry",
+    "Geriatric Psychiatry", "Addiction Psychiatry", "Consultation-Liaison Psychiatry",
+    "Psychotherapy Services", "Emergency Psychiatry"
+  ],
+  Otorhinolaryngology: [
+    "General ENT Consultation", "Head & Neck Surgery",
+    "Otology & Neurotology", "Rhinology & Sinus Surgery", "Facial Plastic Surgery",
+    "Pediatric ENT", "Laryngology Services"
+  ]
 };
 
 const DepartmentPage = () => {
@@ -299,42 +306,50 @@ const DepartmentPage = () => {
   };
 
   return (
-    <div className="h-screen flex flex-col bg-gray-100 overflow-hidden">
+    <div className="min-h-full flex flex-col bg-linear-to-br from-[#f4faf6] via-white to-[#e6f5eb] text-slate-700">
 
-      <div className="p-6 bg-white shadow">
+      <div className="p-6 bg-white/96 border-b border-[#dbeee0] shadow-[0_8px_24px_rgba(15,23,42,0.08)]">
         <BackButton />
-        <h2 className="text-3xl font-bold text-gray-800 mt-4">
-          {id} Sub-Services
-        </h2>
+        <div className="mt-2 flex items-end justify-between gap-4">
+          <div>
+            <h2 className="text-3xl font-bold tracking-tight text-emerald-800">
+              {id} Sub-Services
+            </h2>
+            <p className="mt-2 text-sm text-slate-500">Department queue control panel</p>
+          </div>
+          <div className="hidden md:inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800">
+            {services.length} Services
+          </div>
+        </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="p-6 pb-10">
 
         {/* NOW SERVING */}
-        <div className="bg-white p-6 rounded-xl shadow mb-8 text-center">
-          <h3 className="text-xl font-semibold mb-2">Now Serving</h3>
+        <div className="mb-8 rounded-3xl border border-[#dbeee0] bg-white p-6 shadow-[0_18px_50px_rgba(15,23,42,0.08)] text-center">
+          <h3 className="text-xl font-semibold mb-2 text-emerald-800 uppercase tracking-wide">Now Serving</h3>
 
-          <p className="text-5xl font-bold text-blue-900 mb-6">
+          <p className="text-6xl font-black tracking-[0.2em] text-emerald-700 mb-6">
             {formatQueueNumber(liveNumber)}
           </p>
 
           <div className="flex justify-center gap-4 flex-wrap">
-            <button onClick={handleStart} className="bg-green-600 text-white px-5 py-2 rounded-lg">▶ Start</button>
-            <button onClick={handleNext} className="bg-blue-900 text-white px-5 py-2 rounded-lg">⏭ Next</button>
-            <button onClick={handleBack} className="bg-yellow-500 text-white px-5 py-2 rounded-lg">⬅ Back</button>
-            <button onClick={handleReset} className="bg-red-600 text-white px-5 py-2 rounded-lg">🔄 Reset</button>
+            <button onClick={handleStart} className="rounded-xl bg-emerald-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 transition">Start</button>
+            <button onClick={handleNext} className="rounded-xl bg-sky-700 px-5 py-2.5 text-sm font-semibold text-white hover:bg-sky-800 transition">Next</button>
+            <button onClick={handleBack} className="rounded-xl bg-amber-500 px-5 py-2.5 text-sm font-semibold text-white hover:bg-amber-600 transition">Back</button>
+            <button onClick={handleReset} className="rounded-xl bg-rose-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-rose-700 transition">Reset</button>
           </div>
         </div>
 
 
         {/* SUB SERVICES */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
           {services.map((service) => (
-            <div key={service} className="bg-white p-6 rounded-2xl shadow relative">
-              <div className="absolute top-4 right-4 bg-blue-900 text-white text-sm px-3 py-1 rounded-full">
+            <div key={service} className="relative rounded-2xl border border-[#dce8df] bg-white p-6 shadow-[0_6px_16px_rgba(15,23,42,0.06)]">
+              <div className="absolute top-4 right-4 rounded-full bg-emerald-700 px-3 py-1 text-xs font-semibold text-white">
                 {counts[service] || 0}
               </div>
-              <p className="font-semibold">{service}</p>
+              <p className="pr-12 text-base font-semibold text-slate-700 leading-snug">{service}</p>
             </div>
           ))}
         </div>

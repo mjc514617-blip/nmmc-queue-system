@@ -284,18 +284,11 @@ const surgerySchedules: Record<string, DepartmentServiceSchedule> = {
     location: "OPD Building 2nd Floor",
     windows: [
       {
-        daysLabel: "Monday & Thursday",
-        timeLabel: "1:00 PM - 5:00 PM",
-        startMinutes: toMinutes(13, 0),
-        endMinutes: toMinutes(17, 0),
-        matchesDay: (date) => [1, 4].includes(date.getDay()),
-      },
-      {
-        daysLabel: "Saturday",
-        timeLabel: "6:00 AM - 2:00 PM",
-        startMinutes: toMinutes(6, 0),
-        endMinutes: toMinutes(14, 0),
-        matchesDay: (date) => date.getDay() === 6,
+        daysLabel: "Monday & Wednesday",
+        timeLabel: "1:00 AM - 10:00 PM",
+        startMinutes: toMinutes(1, 0),
+        endMinutes: toMinutes(22, 0),
+        matchesDay: (date) => [1, 3].includes(date.getDay()),
       },
     ],
   },

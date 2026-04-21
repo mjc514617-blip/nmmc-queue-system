@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 type LoginAccount = {
   username?: string;
@@ -17,6 +17,8 @@ const asArray = (value: unknown): LoginAccount[] => {
 
 const UserLogin: React.FC = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const showAdminBack = searchParams.get("from") === "admin";
   const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -65,6 +67,16 @@ const UserLogin: React.FC = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-emerald-50 via-white to-slate-100 px-4">
       <div className="w-full max-w-md rounded-3xl border border-emerald-100 bg-white/95 p-10 shadow-[0_20px_60px_rgba(15,23,42,0.14)]">
+        {showAdminBack && (
+          <button
+            type="button"
+            onClick={() => navigate("/admin")}
+            className="mb-4 inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-sm font-semibold text-emerald-700 transition hover:bg-emerald-100"
+          >
+            ← Back to Admin Login
+          </button>
+        )}
+
         <h1 className="text-3xl font-extrabold tracking-tight text-center text-emerald-800 mb-2">
           User Login
         </h1>

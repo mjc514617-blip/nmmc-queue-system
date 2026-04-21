@@ -20,8 +20,8 @@ import AdminProfile from "./pages/AdminProfile";
 import WelcomeScreen from "./components/WelcomeScreen";
 import DepartmentSelection from "./components/DepartmentSelection";
 import QueueInformation from "./components/QueueInformation";
-import { insertQueueTicket, supabase } from "./lib/supabaseClient";
-import QueueTracking from "./pages/QueueTracking";
+import { supabase } from "./lib/supabaseClient";
+import { encodeDepartmentForQr } from "./lib/departmentCodes";
 
 /* =============================
    QUEUE INFORMATION WRAPPER
@@ -29,7 +29,6 @@ import QueueTracking from "./pages/QueueTracking";
 
 interface QueueInformationWrapperProps {
   department: string;
-  service: string;
   doctorName: string;
   roomNumber: string;
   getNextDepartmentTicket: (department: string) => number;
@@ -40,7 +39,6 @@ interface QueueInformationWrapperProps {
 
 const QueueInformationWrapper: React.FC<QueueInformationWrapperProps> = ({
   department,
-  service,
   doctorName,
   roomNumber,
   getNextDepartmentTicket,
@@ -65,7 +63,6 @@ const QueueInformationWrapper: React.FC<QueueInformationWrapperProps> = ({
       doctorName={doctorName}
       roomNumber={roomNumber}
       department={department}
-      service={service}
       onPrint={async () => onPrint(ticketNumber)}
       onBack={onBack}
       onCancel={onCancel}
@@ -82,9 +79,6 @@ const App: React.FC = () => {
 
   {/* ================= LIVE MONITOR (PUBLIC) ================= */}
   <Route path="/live/:department" element={<LiveQueueMonitor />} />
-
-  {/* ================= PUBLIC TRACKING ================= */}
-  <Route path="/track" element={<QueueTracking />} />
 
   {/* ================= PATIENT QUEUE STATUS ================= */}
   <Route path="/queue/:queueNumber" element={<PatientQueue />} />
@@ -117,6 +111,8 @@ const App: React.FC = () => {
 
   </Route>
 
+  <Route path="*" element={<WelcomeScreenWrapper />} />
+
 </Routes>
   );
 };
@@ -137,7 +133,10 @@ const WelcomeScreenWrapper = () => {
 
   const baseUrl =
     import.meta.env.VITE_PRINT_SERVICE_URL || "http://127.0.0.1:5000";
-  const qrBaseUrl = (import.meta.env.VITE_QR_BASE_URL || "https://nmmc-queue-system.vercel.app").replace(/\/$/, "");
+  const qrBaseUrl = (
+    import.meta.env.VITE_QR_BASE_URL ||
+    "https://nmmc-queue-system.vercel.app"
+  ).replace(/\/$/, "");
 
   const checkDailyReset = React.useCallback(() => {
     const today = new Date().toDateString();
@@ -195,21 +194,6 @@ const WelcomeScreenWrapper = () => {
     formattedTicketNumber: string,
     payload: Record<string, string>
   ): Promise<OperationResult> => {
-    const queueNumberAsInt = Number.parseInt(formattedTicketNumber, 10);
-
-    const { error: queueInsertError } = await insertQueueTicket({
-      queueNumber: queueNumberAsInt,
-      department: payload.department,
-      service: payload.service,
-    });
-
-    if (queueInsertError) {
-      return {
-        ok: false,
-        message: `Failed to save ticket online: ${queueInsertError.message}`,
-      };
-    }
-
     const timestamp = new Date().toISOString();
 
     const insertPayloads = [
@@ -239,24 +223,18 @@ const WelcomeScreenWrapper = () => {
     ];
 
     let lastErrorMessage = "Unknown Supabase error";
-    let insertedInLegacyTickets = false;
 
     for (const candidatePayload of insertPayloads) {
       const { error } = await supabase.from("tickets").insert(candidatePayload);
       if (!error) {
-        insertedInLegacyTickets = true;
-        break;
+        return { ok: true, message: "Ticket saved online." };
       }
       lastErrorMessage = error.message;
     }
 
-    if (insertedInLegacyTickets) {
-      return { ok: true, message: "Ticket saved online." };
-    }
-
     return {
-      ok: true,
-      message: `Ticket saved online. Legacy mirror save failed: ${lastErrorMessage}`,
+      ok: false,
+      message: `Failed to save ticket online: ${lastErrorMessage}`,
     };
   };
 
@@ -269,7 +247,8 @@ const WelcomeScreenWrapper = () => {
     }
 
     const formattedTicketNumber = ticketNumber.toString().padStart(3, "0");
-    const qrUrl = `${qrBaseUrl}/track?queue=${encodeURIComponent(formattedTicketNumber)}`;
+    const departmentCode = encodeDepartmentForQr(selectedDepartment);
+    const qrUrl = `${qrBaseUrl}/q/${encodeURIComponent(formattedTicketNumber)}?d=${encodeURIComponent(departmentCode)}`;
     const payload = {
       department: selectedDepartment,
       service: selectedService,
@@ -356,7 +335,6 @@ const WelcomeScreenWrapper = () => {
       {screen === "queue" && selectedDepartment && (
         <QueueInformationWrapper
           department={selectedDepartment}
-          service={selectedService || ""}
           doctorName={assignedDoctor}
           roomNumber={assignedRoom}
           getNextDepartmentTicket={getNextDepartmentTicket}

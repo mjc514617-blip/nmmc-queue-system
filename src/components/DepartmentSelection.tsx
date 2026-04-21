@@ -247,14 +247,14 @@ const DepartmentSelection: React.FC<DepartmentSelectionProps> = ({
                     onSelectSubService(service);
                   }}
                   disabled={isDisabled}
-                  className={`group min-h-44 md:min-h-48 rounded-xl px-5 py-6 text-center transition duration-200 border ${
+                  className={`group min-h-44 md:min-h-48 rounded-xl px-5 py-6 text-left transition duration-200 border ${
                     isDisabled
                       ? "border-[#c6ddd0] bg-[#d7eade] text-slate-600 cursor-not-allowed"
                       : "border-emerald-700/40 bg-[#218946] shadow-[0_10px_18px_rgba(33,137,70,0.18)] hover:-translate-y-0.5 hover:bg-[#1f7f41]"
                   }`}
                 >
-                  <div className="h-full flex flex-col items-center justify-center">
-                    <p className={`text-base md:text-lg font-semibold leading-snug ${isDisabled ? "text-slate-600" : "text-white"}`}>
+                  <div className="h-full flex flex-col items-start justify-start">
+                    <p className={`w-full text-base md:text-lg font-semibold leading-snug ${isDisabled ? "text-slate-600" : "text-white"}`}>
                       {service}
                     </p>
 
@@ -262,7 +262,7 @@ const DepartmentSelection: React.FC<DepartmentSelectionProps> = ({
                       <>
                         {cardState.availability.schedule.windows.map((window, index) => (
                           <React.Fragment key={`${service}-window-${index}`}>
-                            <p className={`mt-2 text-[11px] flex items-center justify-center gap-1.5 ${isDisabled ? "text-slate-500" : "text-emerald-50"}`}>
+                            <p className={`mt-2 w-full text-[11px] flex items-center justify-start gap-1.5 ${isDisabled ? "text-slate-500" : "text-emerald-50"}`}>
                               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                                 <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
                                 <line x1="16" y1="2" x2="16" y2="6" />
@@ -271,7 +271,7 @@ const DepartmentSelection: React.FC<DepartmentSelectionProps> = ({
                               </svg>
                               <span>{window.label ? `${window.label} - ${window.daysLabel}` : window.daysLabel}</span>
                             </p>
-                            <p className={`text-[11px] flex items-center justify-center gap-1.5 ${isDisabled ? "text-slate-500" : "text-emerald-50"}`}>
+                            <p className={`w-full text-[11px] flex items-center justify-start gap-1.5 ${isDisabled ? "text-slate-500" : "text-emerald-50"}`}>
                               <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                                 <circle cx="12" cy="12" r="9" />
                                 <polyline points="12 7 12 12 15 14" />
@@ -280,14 +280,14 @@ const DepartmentSelection: React.FC<DepartmentSelectionProps> = ({
                             </p>
                           </React.Fragment>
                         ))}
-                        <p className={`text-[11px] flex items-center justify-center gap-1.5 ${isDisabled ? "text-slate-500" : "text-emerald-50"}`}>
+                        <p className={`w-full text-[11px] flex items-center justify-start gap-1.5 ${isDisabled ? "text-slate-500" : "text-emerald-50"}`}>
                           <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
                             <path d="M21 10c0 6-9 12-9 12s-9-6-9-12a9 9 0 0 1 18 0z" />
                             <circle cx="12" cy="10" r="3" />
                           </svg>
                           <span>{cardState.availability.schedule.location}</span>
                         </p>
-                        <p className={`mt-2 text-xs font-semibold ${cardState.isAvailableNow ? "text-emerald-100" : "text-slate-500"}`}>
+                        <p className={`mt-2 w-full text-xs font-semibold ${cardState.isAvailableNow ? "text-emerald-100" : "text-slate-500"}`}>
                           {closedMessage}
                         </p>
                       </>

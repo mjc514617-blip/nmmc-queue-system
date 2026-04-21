@@ -11,11 +11,12 @@ const SignupSelection: React.FC = () => {
           Choose Sign Up Type
         </h1>
         <p className="mx-auto max-w-xs text-center text-sm text-slate-500 mb-8">
-          Select which account type you want to create.
+          Select account type to continue registration.
         </p>
 
         <div className="space-y-4">
           <button
+            type="button"
             onClick={() => navigate("/admin/signup/admin")}
             className="w-full bg-emerald-700 text-white py-3 rounded-xl font-semibold hover:bg-emerald-800 transition"
           >
@@ -23,6 +24,7 @@ const SignupSelection: React.FC = () => {
           </button>
 
           <button
+            type="button"
             onClick={() => navigate("/admin/signup/user")}
             className="w-full bg-white border border-emerald-200 text-emerald-700 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition"
           >
@@ -30,6 +32,7 @@ const SignupSelection: React.FC = () => {
           </button>
 
           <button
+            type="button"
             onClick={() => navigate("/admin")}
             className="w-full text-sm text-slate-600 hover:text-emerald-700 hover:underline"
           >

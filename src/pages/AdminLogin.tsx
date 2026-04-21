@@ -124,7 +124,7 @@ const AdminLogin: React.FC = () => {
           </div>
 
           <button
-            onClick={() => navigate("/user")}
+            onClick={() => navigate("/user?from=admin")}
             className="w-full text-sm text-slate-600 hover:text-emerald-700 hover:underline"
           >
             Continue as User Login

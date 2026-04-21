@@ -1,30 +1,12 @@
 import { createClient } from "@supabase/supabase-js";
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL!;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY!;
+const supabaseUrl =
+  import.meta.env.VITE_SUPABASE_URL || "https://etrdsdttsuiqgkomcsxe.supabase.co";
+const supabaseKey =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV0cmRzZHR0c3VpcWdrb21jc3hlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzIxNjQ3ODIsImV4cCI6MjA4Nzc0MDc4Mn0.eGz8i843n4U8IYWsCbfrNTON97UDbT48qaK2QHJDBDg";
 
 export const supabase = createClient(supabaseUrl, supabaseKey);
-
-export type QueueInsertInput = {
-  queueNumber: number;
-  department: string;
-  service: string;
-};
-
-export const insertQueueTicket = async ({
-  queueNumber,
-  department,
-  service,
-}: QueueInsertInput) => {
-  // Queue table schema from Supabase Phase 1:
-  // name, service, queue_number, status, created_at
-  return supabase.from("queue").insert({
-    name: department,
-    service,
-    queue_number: queueNumber,
-    status: "waiting",
-  });
-};
 
 // expose client on window object so you can run commands in console
 if (typeof window !== "undefined") {

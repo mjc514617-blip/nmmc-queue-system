@@ -1,13 +1,12 @@
 import React from "react";
 import { QRCodeCanvas } from "qrcode.react";
-import { getDepartmentServiceAvailability, formatMinutesToTimeLabel } from "../lib/internalMedicineSchedule";
+import { encodeDepartmentForQr } from "../lib/departmentCodes";
 
 interface QueueInformationProps {
   ticketNumber: string;
   doctorName: string;
   roomNumber: string;
   department: string;
-  service: string;
   onPrint: () => Promise<{ ok: boolean; message: string }>;
   onBack: () => void;
   onCancel: () => void;
@@ -15,14 +14,13 @@ interface QueueInformationProps {
 
 const QueueInformation: React.FC<QueueInformationProps> = ({
   ticketNumber,
+  doctorName,
   roomNumber,
   department,
-  service,
   onPrint,
   onBack,
   onCancel,
 }) => {
-  const [currentTime, setCurrentTime] = React.useState<Date>(new Date());
   const [printServiceStatus, setPrintServiceStatus] = React.useState<"checking" | "online" | "offline">("checking");
   const [isPrinting, setIsPrinting] = React.useState(false);
   const [printFeedback, setPrintFeedback] = React.useState<{
@@ -31,42 +29,14 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
   } | null>(null);
 
   const QR_BASE_URL =
-    import.meta.env.VITE_QR_BASE_URL || "https://nmmc-queue-system.vercel.app";
+    import.meta.env.VITE_QR_BASE_URL ||
+    "https://nmmc-queue-system.vercel.app";
   const baseUrl =
     import.meta.env.VITE_PRINT_SERVICE_URL || "http://127.0.0.1:5000";
 
   const normalizedBaseUrl = QR_BASE_URL.replace(/\/$/, "");
-  const qrValue = `${normalizedBaseUrl}/track?queue=${encodeURIComponent(ticketNumber)}`;
-  const serviceAvailability = React.useMemo(() => {
-    if (!service) {
-      return null;
-    }
-
-    return getDepartmentServiceAvailability(department, service, currentTime);
-  }, [currentTime, department, service]);
-
-  React.useEffect(() => {
-    const timer = window.setInterval(() => {
-      setCurrentTime(new Date());
-    }, 30000);
-
-    return () => {
-      window.clearInterval(timer);
-    };
-  }, []);
-
-  const isPrintAvailable = !serviceAvailability
-    || serviceAvailability.isAvailableNow
-    || serviceAvailability.status === "closed-day";
-  const closedMessage = serviceAvailability
-    ? serviceAvailability.status === "not-yet-available"
-      ? `Tickets are available at ${formatMinutesToTimeLabel(serviceAvailability.opensAtMinutes)}`
-      : serviceAvailability.status === "closed-today"
-        ? serviceAvailability.hasTimeConfigured
-          ? "Tickets are now closed"
-          : "Schedule time not yet posted"
-        : null
-    : null;
+  const departmentCode = encodeDepartmentForQr(department);
+  const qrValue = `${normalizedBaseUrl}/q/${encodeURIComponent(ticketNumber)}?d=${encodeURIComponent(departmentCode)}`;
 
   React.useEffect(() => {
     let isMounted = true;
@@ -122,15 +92,15 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
   }, [printFeedback]);
 
   return (
-    <div className="flex flex-col items-center justify-start min-h-screen w-full px-4 py-3 bg-linear-to-br from-slate-100 via-white to-emerald-50 overflow-y-auto text-slate-700">
+    <div className="flex flex-col items-center justify-center h-screen w-full text-white p-10 bg-linear-to-br from-blue-900 via-blue-800 to-blue-700 overflow-auto">
 
-      <h1 className="text-2xl font-extrabold tracking-wide uppercase mt-2 mb-3 text-emerald-800">
-        QUEUE INFORMATION
+      <h1 className="text-4xl font-bold mb-10">
+        Queue Information
       </h1>
 
-      <div className="mb-3">
+      <div className="mb-4">
         <span
-          className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold ${
+          className={`inline-flex items-center rounded-full px-4 py-1 text-sm font-semibold ${
             printServiceStatus === "online"
               ? "bg-green-500 text-white"
               : printServiceStatus === "offline"
@@ -142,16 +112,8 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
         </span>
       </div>
 
-      {closedMessage && (
-        <div className="mb-3 w-full max-w-xl">
-          <div className="rounded-xl bg-red-100 px-4 py-3 text-sm font-semibold text-red-800 text-center">
-            {closedMessage}
-          </div>
-        </div>
-      )}
-
       {printFeedback && (
-        <div className="mb-3 w-full max-w-xl">
+        <div className="mb-4 w-full max-w-2xl">
           <div
             className={`rounded-xl px-4 py-3 text-sm font-semibold text-center ${
               printFeedback.type === "success"
@@ -166,45 +128,36 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
         </div>
       )}
 
-      <div className="print-area bg-white text-emerald-900 rounded-3xl shadow-[0_14px_38px_rgba(15,23,42,0.12)] px-6 py-5 w-full max-w-lg text-center border border-emerald-100 mb-4">
+      <div className="print-area bg-white text-blue-900 rounded-3xl shadow-2xl p-12 w-full max-w-2xl text-center">
 
-        <p className="text-sm font-medium mb-2 text-slate-500">Your Queue Number</p>
-        <div className="mx-auto mb-4 w-full max-w-52 rounded-2xl border-2 border-emerald-200 bg-white py-2 shadow-md">
-          <p className="text-4xl font-extrabold tracking-widest text-emerald-700">{ticketNumber}</p>
+        <p className="text-lg font-medium mb-2">Waiting Number</p>
+        <h2 className="text-6xl font-bold mb-8">{ticketNumber}</h2>
+
+        <div className="mb-4">
+          <p className="text-lg font-medium">Attending Doctor</p>
+          <p className="text-2xl font-semibold">{doctorName}</p>
         </div>
 
-        <div className="mx-auto w-full max-w-80 space-y-2.5 mb-4">
-          <div className="rounded-xl bg-[#218946] text-white py-2.5 px-4 shadow-md">
-            <p className="text-[11px] uppercase tracking-wider text-emerald-100">Waiting Number</p>
-            <p className="text-xl font-extrabold leading-tight uppercase">{ticketNumber}</p>
-          </div>
-
-          <div className="rounded-xl bg-[#218946] text-white py-2.5 px-4 shadow-md">
-            <p className="text-[11px] uppercase tracking-wider text-emerald-100">Service</p>
-            <p className="text-base font-extrabold leading-tight uppercase">{service || "N/A"}</p>
-          </div>
-
-          <div className="rounded-xl bg-[#218946] text-white py-2.5 px-4 shadow-md">
-            <p className="text-[11px] uppercase tracking-wider text-emerald-100">Room / Location</p>
-            <p className="text-base font-extrabold leading-tight uppercase">{roomNumber || "N/A"}</p>
-          </div>
+        <div className="mb-8">
+          <p className="text-lg font-medium">Room Number</p>
+          <p className="text-2xl font-semibold">{roomNumber}</p>
         </div>
 
-        <div className="flex flex-col items-center mb-4">
-          <QRCodeCanvas value={qrValue} size={105} fgColor="#15803d" bgColor="#ffffff" />
-          <p className="text-sm mt-2 text-gray-600">
+        <div className="flex flex-col items-center mb-8">
+          <QRCodeCanvas value={qrValue} size={150} />
+          <p className="text-sm mt-3 text-gray-600">
             Scan to Check Your Queue Status
           </p>
-          <p className="text-[11px] mt-1 text-gray-500 break-all px-2">
+          <p className="text-xs mt-2 text-gray-500 break-all px-2">
             {qrValue}
           </p>
         </div>
 
-        <div className="flex justify-center gap-3 flex-wrap">
+        <div className="flex justify-center gap-6 flex-wrap">
 
           <button
             onClick={onBack}
-            className="bg-slate-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-slate-700 transition"
+            className="bg-gray-500 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:bg-gray-600 transition"
           >
             Back
           </button>
@@ -213,15 +166,17 @@ const QueueInformation: React.FC<QueueInformationProps> = ({
             onClick={() => {
               void handlePrint();
             }}
-            disabled={isPrinting || !isPrintAvailable}
-            className="bg-emerald-700 text-white px-5 py-2 rounded-xl text-sm font-semibold shadow-lg hover:scale-105 hover:bg-emerald-800 transition-transform duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={isPrinting}
+            className="bg-blue-900 text-white px-8 py-3 rounded-xl text-lg font-semibold shadow-lg hover:scale-105 transition-transform duration-200 disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {isPrinting ? "Processing..." : isPrintAvailable ? "Print Ticket" : "Ticket Unavailable"}
+            {isPrinting ? "Processing..." : "Print Ticket"}
           </button>
 
           <button
             onClick={onCancel}
-            className="bg-rose-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-rose-700 transition"
+            className="bg-red-600 text-white px-6 py-3 rounded-xl text-lg font-semibold hover:bg-red-700 transition            sudo systemctl enable ssh
+            sudo systemctl start ssh
+            sudo systemctl status ssh"
           >
             Cancel
           </button>
