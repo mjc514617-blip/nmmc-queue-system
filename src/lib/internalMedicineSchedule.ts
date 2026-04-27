@@ -686,6 +686,17 @@ export const getDepartmentServiceAvailability = (
   };
 };
 
+export const getDepartmentServiceLocation = (
+  department: string,
+  service: string
+): string | null => {
+  const departmentSchedules = schedulesByDepartment[department];
+  if (!departmentSchedules) return null;
+
+  const schedule = departmentSchedules[service];
+  return schedule?.location || null;
+};
+
 export const formatMinutesToTimeLabel = (minutes: number) => {
   const normalizedMinutes = ((minutes % (24 * 60)) + (24 * 60)) % (24 * 60);
   const hours24 = Math.floor(normalizedMinutes / 60);
